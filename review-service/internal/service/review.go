@@ -1,0 +1,71 @@
+package service
+
+import (
+	"context"
+	"fmt"
+
+	pb "review-service/api/review/v1"
+	"review-service/internal/biz"
+	"review-service/internal/data/model"
+)
+
+type ReviewService struct {
+	pb.UnimplementedReviewServer
+    uc *biz.ReviewUsecase
+}
+
+func NewReviewService(uc *biz.ReviewUsecase) *ReviewService {
+	return &ReviewService{uc: uc}
+}
+
+func (s *ReviewService) CreateReview(ctx context.Context, req *pb.CreateReviewRequest) (*pb.CreateReviewReply, error) {
+    var anonymous int32   
+    if req.Anonymous {
+        anonymous = 1
+    }
+    review, err := s.uc.CreateReview(ctx, &model.ReviewInfo{
+        UserID: req.UserID,
+        OrderID: req.OrderID,
+        Score: req.Score,
+        ServiceScore: req.ServiceScore,
+        ExpressScore: req.ExpressScore,
+        Content: req.Content,
+        PicInfo: req.PicInfo,
+        VideoInfo: req.VideoInfo,
+        Anonymous: anonymous,
+        Status: 0,
+    })
+    if err != nil {
+        return nil, err
+    }
+
+    return &pb.CreateReviewReply{ReviewID: review.ReviewID}, nil
+}
+func (s *ReviewService) UpdateReview(ctx context.Context, req *pb.UpdateReviewRequest) (*pb.UpdateReviewReply, error) {
+    return &pb.UpdateReviewReply{}, nil
+}
+func (s *ReviewService) DeleteReview(ctx context.Context, req *pb.DeleteReviewRequest) (*pb.DeleteReviewReply, error) {
+    return &pb.DeleteReviewReply{}, nil
+}
+func (s *ReviewService) GetReview(ctx context.Context, req *pb.GetReviewRequest) (*pb.GetReviewReply, error) {
+    return &pb.GetReviewReply{}, nil
+}
+func (s *ReviewService) ListReview(ctx context.Context, req *pb.ListReviewRequest) (*pb.ListReviewReply, error) {
+    return &pb.ListReviewReply{}, nil
+}
+
+
+func (s *ReviewService) ReplyReview(ctx context.Context, req *pb.ReplyReviewRequest) (*pb.ReplyReviewReply, error) {
+    fmt.Println("1111111", req)
+    reply, err := s.uc.CreateReply(ctx, &biz.ReplyParam{
+        StoreID: req.GetStoreID(),
+        ReviewID: req.GetReviewID(),
+        PicInfo: req.GetPicInfo(),
+        Content: req.GetContent(),
+        VideoInfo: req.GetVideoInfo(),
+    })
+    if err != nil {
+        return nil, err
+    }
+    return &pb.ReplyReviewReply{ReplyID: reply.ReplyID}, nil
+}
